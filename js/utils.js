@@ -1,10 +1,13 @@
-var StringFunctions = {
-  countWords: function (str) {
-    return str.split(" ").length;
-  },
-  countChars: function (str) {
-    return str.split("").length;
-  },
-};
+export function countWords(str) {
+  return str.split(" ").length;
+}
 
-export default StringFunctions;
+export function countChars(str) {
+  return str.split("").length;
+}
+
+export function iterateNodes(array, callback) {
+  for (var i = 0; i < array.length; ++i) {
+    callback(array[i]);
+  }
+}
