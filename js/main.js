@@ -3,13 +3,13 @@ import "../css/custom.css";
 
 import $ from "jquery";
 
-import { countChars, iterateNodes } from "./utils";
+import { countChars, iterateNodes, createUser } from "./utils";
 
 var CodelyBackoffice = {
   /*******************************************************************************************************************
    * Common features
    ******************************************************************************************************************/
-  initCommon: function () {
+  initCommon() {
     /**
      * Show/hide an element based on a change in another field.
      */
@@ -24,7 +24,7 @@ var CodelyBackoffice = {
   /*******************************************************************************************************************
    * Common forms functions
    ******************************************************************************************************************/
-  initForms: function () {
+  initForms() {
     /**
      * Count character in selected fields
      */
@@ -32,7 +32,7 @@ var CodelyBackoffice = {
 
     iterateNodes(contentCounters, function (counter) {
       var form_field = counter.parentElement.querySelector(".js-form-control");
-      var char_counter_container = counter.querySelector(".js-count-chars");  
+      var char_counter_container = counter.querySelector(".js-count-chars");
       char_counter_container.innerHTML = countChars(form_field.value);
       form_field.addEventListener("keyup", function () {
         char_counter_container.innerHTML = countChars(form_field.value);
@@ -62,7 +62,7 @@ var CodelyBackoffice = {
               select.append(option);
             }
           } else {
-            console.warn(
+            console.error(
               "Could not find" + select.getAttribute("data-type") + ".json"
             );
           }
@@ -73,7 +73,7 @@ var CodelyBackoffice = {
   /*******************************************************************************************************************
    * Filter courses by category
    ******************************************************************************************************************/
-  initCategoryFilter: function () {
+  initCategoryFilter() {
     var filter = document.getElementById("category");
 
     filter.addEventListener("change", function () {
@@ -94,7 +94,7 @@ var CodelyBackoffice = {
   /*******************************************************************************************************************
    * Create user form
    ******************************************************************************************************************/
-  initUserForm: function () {
+  initUserForm() {
     function validateRequiredField(field) {
       var isValid = !!field.value;
 
@@ -163,14 +163,38 @@ var CodelyBackoffice = {
       return isValid;
     }
 
+    function handleFormSuccess(form, newUser) {
+      var thanksBlock = document.getElementById("thanks");
+      var title = thanksBlock.querySelector("h3");
+      var content = thanksBlock.querySelector("p");
+
+      title.innerHTML = "Thank you " + newUser.firstName + " for registering!";
+      content.innerHTML =
+        "We have sent a confirmation email to " + newUser.email;
+
+      form.classList.add("hidden");
+      thanksBlock.classList.remove("hidden");
+    }
+
+    function handleFormError() {
+      document.getElementById("network_form_error").classList.remove("hidden");
+    }
+
     document
       .getElementById("user_form")
       .addEventListener("submit", function (ev) {
         ev.preventDefault();
+        var form = ev.target;
 
         if (isFormValid()) {
-          this.classList.add("hidden");
-          document.getElementById("thanks").classList.remove("hidden");
+          createUser(form, function ({ success, data: newUser }) {
+            if (!success) {
+              handleFormError();
+              return;
+            }
+
+            handleFormSuccess(form, newUser);
+          });
         }
       });
   },
