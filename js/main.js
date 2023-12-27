@@ -3,7 +3,7 @@ import "../css/custom.css";
 
 import $ from "jquery";
 
-import { countChars, iterateNodes, createUser } from "./utils";
+import { countChars, iterateNodes, createUser, show, hide } from "./utils";
 
 const CodelyBackoffice = {
   /*******************************************************************************************************************
@@ -69,19 +69,42 @@ const CodelyBackoffice = {
   initCategoryFilter() {
     const filter = document.getElementById("category");
 
-    filter.addEventListener("change", function () {
-      const category = this.value;
+    function getSelectedValues(node) {
+      const selectedValues = [];
+      const checkboxes = node.querySelectorAll(
+        'input[type="checkbox"]:checked'
+      );
+
+      for (const checkbox of checkboxes) {
+        selectedValues.push(checkbox.value);
+      }
+      return selectedValues;
+    }
+
+    function isInList(item, list) {
+      return list.includes(item);
+    }
+
+    function filterElements() {
+      const categories = getSelectedValues(this);
 
       const elementsToFilter = document.querySelectorAll(".js-filtered-item");
 
-      iterateNodes(elementsToFilter, function (element) {
-        if (category && category !== element.getAttribute("data-category")) {
-          element.classList.add("hidden");
-        } else {
-          element.classList.remove("hidden");
+      for (const element of elementsToFilter) {
+        if (categories.length === 0) {
+          show(element);
+          continue;
         }
-      });
-    });
+        const elementCategory = element.getAttribute("data-category");
+
+        if (isInList(elementCategory, categories)) {
+          show(element);
+        } else {
+          hide(element);
+        }
+      }
+    }
+    filter.addEventListener("change", filterElements);
   },
   /*******************************************************************************************************************
    * Create user form
@@ -133,7 +156,7 @@ const CodelyBackoffice = {
     }
 
     function isFormValid() {
-      document.getElementById("user_form_error").classList.add("hidden");
+      hide(document.getElementById("user_form_error"));
 
       const formControls = document.querySelectorAll(".js-form-control");
 
@@ -150,7 +173,7 @@ const CodelyBackoffice = {
         validateBio();
 
       if (!isValid) {
-        document.getElementById("user_form_error").classList.remove("hidden");
+        show(document.getElementById("user_form_error"));
       }
 
       return isValid;
@@ -181,12 +204,12 @@ const CodelyBackoffice = {
       title.innerHTML = sanitize`Thank you ${newUser.firstName} for registering!`;
       content.innerHTML = sanitize`We have sent a confirmation email to <strong>${newUser.email}<strong>`;
 
-      form.classList.add("hidden");
-      thanksBlock.classList.remove("hidden");
+      hide(form);
+      show(thanksBlock);
     }
 
     function handleFormError() {
-      document.getElementById("network_form_error").classList.remove("hidden");
+      show(document.getElementById("network_form_error"));
     }
 
     document

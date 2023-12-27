@@ -12,6 +12,14 @@ export function iterateNodes(array, callback) {
   }
 }
 
+export function show(element) {
+  element.classList.remove("hidden");
+}
+
+export function hide(element) {
+  element.classList.add("hidden");
+}
+
 export function createUser(form, callback) {
   callback({
     success: true,

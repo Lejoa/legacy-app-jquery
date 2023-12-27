@@ -14,14 +14,29 @@
         <button class="js-trigger-container" rel="filters">Show filters</button>
         <div id="filters" class="hidden">
           <label for="category">Category:</label>
-
-          <select id="category">
-            <option value="">All</option>
-            <option value="frontend">Frontend</option>
-            <option value="backend">Backend</option>
-            <option value="tooling">Tooling</option>
-            <option value="tooling">Mobile</option>
-          </select>
+          <div id="category">
+            <label
+              ><input
+                type="checkbox"
+                name="category"
+                value="frontend"
+              />Frontend</label
+            >
+            <label
+            ><input
+              type="checkbox"
+              name="category"
+              value="frontend"
+              />Backend</label
+            >
+            <label
+            ><input
+              type="checkbox"
+              name="category"
+              value="frontend"
+              />Tooling</label
+            >
+          </div>
         </div>
       </div>
       <div id="courses" class="courses-grid">
