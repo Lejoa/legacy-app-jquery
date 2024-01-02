@@ -3,7 +3,7 @@ import "../css/custom.css";
 
 import $ from "jquery";
 
-import { countChars, iterateNodes, createUser, show, hide } from "./utils";
+import { countChars, createUser, show, hide } from "./utils";
 
 const CodelyBackoffice = {
   /*******************************************************************************************************************
@@ -15,7 +15,7 @@ const CodelyBackoffice = {
      */
     const trigger = document.querySelector(".js-trigger-container");
 
-    trigger.addEventListener("click", function () {
+    trigger.addEventListener("click", () => {
       document
         .getElementById(trigger.getAttribute("rel"))
         .classList.toggle("hidden");
@@ -30,31 +30,34 @@ const CodelyBackoffice = {
      */
     const contentCounters = document.querySelectorAll(".js-count-content");
 
-    iterateNodes(contentCounters, function (counter) {
+    const setUpCharacterCounters = (counter) => {
       const form_field =
         counter.parentElement.querySelector(".js-form-control");
       const char_counter_container = counter.querySelector(".js-count-chars");
-      char_counter_container.innerHTML = countChars(form_field.value);
-      form_field.addEventListener("keyup", function () {
-        char_counter_container.innerHTML = countChars(form_field.value);
-      });
-    });
 
+      const printCharacterCount = () => {
+        char_counter_container.innerHTML = countChars(form_field.value);
+      };
+      printCharacterCount();
+      form_field.addEventListener("keyup", printCharacterCount);
+    };
+
+    contentCounters.forEach(setUpCharacterCounters);
     /**
      * Load select data
      */
     const dataLoaders = document.querySelectorAll(".js-load-data");
 
-    iterateNodes(dataLoaders, function (select) {
+    dataLoaders.forEach((select) => {
       const domain =
         document.domain == "localhost" ? "localhost:8080" : document.domain;
       const type = select.getAttribute("data-type");
       // eslint-disable-next-line jquery/no-ajax
-      $.getJSON(`http://${domain}/data/${type}.json`, function ({ data }) {
+      $.getJSON(`http://${domain}/data/${type}.json`, ({ data }) => {
         if (data) {
-          for (let i = 0, len = data.length; i < len; i++) {
+          for (const item of data) {
             const option = document.createElement("option");
-            option.textContent = data[i].name;
+            option.textContent = item.name;
             select.append(option);
           }
         } else {
@@ -74,9 +77,9 @@ const CodelyBackoffice = {
         'input[type="checkbox"]:checked'
       );
 
-      const selectedValues = Array.from(checkboxes).map(function (checkbox) {
-        return checkbox.value;
-      });
+      const selectedValues = Array.from(checkboxes).map(
+        (checkbox) => checkbox.value
+      );
 
       return selectedValues;
     }
@@ -85,7 +88,7 @@ const CodelyBackoffice = {
       return list.includes(item);
     }
 
-    function filterElements() {
+    filter.addEventListener("change", function () {
       const categories = getSelectedValues(this);
 
       const elementsToFilter = document.querySelectorAll(".js-filtered-item");
@@ -103,8 +106,7 @@ const CodelyBackoffice = {
           hide(element);
         }
       }
-    }
-    filter.addEventListener("change", filterElements);
+    });
   },
   /*******************************************************************************************************************
    * Create user form
@@ -160,7 +162,7 @@ const CodelyBackoffice = {
 
       const formControls = document.querySelectorAll(".js-form-control");
 
-      iterateNodes(formControls, function (control) {
+      formControls.forEach((control) => {
         control.classList.remove("error");
       });
 
@@ -196,6 +198,10 @@ const CodelyBackoffice = {
       return output;
     }
 
+    function handleFormError() {
+      show(document.getElementById("network_form_error"));
+    }
+
     function handleFormSuccess(form, newUser) {
       const thanksBlock = document.getElementById("thanks");
       const title = thanksBlock.querySelector("h3");
@@ -208,27 +214,21 @@ const CodelyBackoffice = {
       show(thanksBlock);
     }
 
-    function handleFormError() {
-      show(document.getElementById("network_form_error"));
-    }
+    document.getElementById("user_form").addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      const form = ev.target;
 
-    document
-      .getElementById("user_form")
-      .addEventListener("submit", function (ev) {
-        ev.preventDefault();
-        const form = ev.target;
+      if (isFormValid()) {
+        createUser(form, function ({ success, data: newUser }) {
+          if (!success) {
+            handleFormError();
+            return;
+          }
 
-        if (isFormValid()) {
-          createUser(form, function ({ success, data: newUser }) {
-            if (!success) {
-              handleFormError();
-              return;
-            }
-
-            handleFormSuccess(form, newUser);
-          });
-        }
-      });
+          handleFormSuccess(form, newUser);
+        });
+      }
+    });
   },
 };
 
