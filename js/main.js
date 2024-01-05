@@ -22,7 +22,20 @@ const CodelyBackoffice = {
   /*******************************************************************************************************************
    * Common forms functions
    ******************************************************************************************************************/
-  initForms() {
+  async initForms() {
+    async function fetchData(select) {
+      const domain =
+        document.domain == "localhost" ? "localhost:8080" : document.domain;
+      const type = select.getAttribute("data-type");
+
+      try {
+        const response = await fetch(`http://${domain}/data/${type}.json`);
+        return await response.json();
+      } catch (e) {
+        console.error(`Could not find ${type}.json`);
+      }
+    }
+
     /**
      * Count character in selected fields
      */
@@ -45,25 +58,27 @@ const CodelyBackoffice = {
      * Load select data
      */
     const dataLoaders = document.querySelectorAll(".js-load-data");
+    const requests = [];
 
-    dataLoaders.forEach((select) => {
-      const domain =
-        document.domain == "localhost" ? "localhost:8080" : document.domain;
-      const type = select.getAttribute("data-type");
+    try {
+      for (const select of dataLoaders) {
+        requests.push(fetchData(select));
+      }
 
-      fetch(`http://${domain}/data/${type}.json`)
-        .then((response) => response.json())
-        .then(({ data }) => {
-          for (const item of data) {
-            const option = document.createElement("option");
-            option.textContent = item.name;
-            select.append(option);
-          }
-        })
-        .catch(() => {
-          console.error(`Could not find ${type}.json`);
-        });
-    });
+      const responses = await Promise.all(requests);
+
+      responses.forEach(({ data }, index) => {
+        const select = dataLoaders[index];
+
+        for (const item of data) {
+          const option = document.createElement("option");
+          option.textContent = item.name;
+          select.append(option);
+        }
+      });
+    } catch (error) {
+      console.error(error);
+    }
   },
   /*******************************************************************************************************************
    * Filter courses by category
@@ -213,21 +228,22 @@ const CodelyBackoffice = {
       show(thanksBlock);
     }
 
-    document.getElementById("user_form").addEventListener("submit", (ev) => {
-      ev.preventDefault();
-      const form = ev.target;
+    document
+      .getElementById("user_form")
+      .addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        const form = ev.target;
 
-      if (isFormValid()) {
-        createUser(form).then(({ success, data: newUser }) => {
+        if (isFormValid()) {
+          const { success, data: newUser } = await createUser(form);
           if (!success) {
             handleFormError();
             return;
           }
 
           handleFormSuccess(form, newUser);
-        });
-      }
-    });
+        }
+      });
   },
 };
 
